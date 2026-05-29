@@ -1,2 +1,7 @@
 # Local reference checkout; intentionally not part of this repo.
 /reference/
+
+# Dependencies and generated output.
+/node_modules/
+/dist/
+/coverage/

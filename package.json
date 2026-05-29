@@ -1,0 +1,21 @@
+{
+  "name": "livestore-small-core",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "tsx examples/todo.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "effect": "3.21.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
