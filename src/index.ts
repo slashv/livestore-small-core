@@ -1,3 +1,5 @@
+export * from './adapter.ts'
+export * from './client.ts'
 export * from './errors.ts'
 export * from './fifo-backend.ts'
 export * from './leader.ts'

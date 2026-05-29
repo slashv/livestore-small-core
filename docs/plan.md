@@ -52,10 +52,10 @@ The implementation should stay in one project, not a monorepo.
 - [x] Created public GitHub repo and local git project.
 - [x] Cloned LiveStore `dev` as ignored reference repo.
 - [x] Cloned Effect `effect@3.21.2` as ignored reference repo.
-- [ ] Scaffold package and strict TypeScript config.
-- [ ] Implement reduced sync-state core.
-- [ ] Implement FIFO backend.
-- [ ] Implement leader processor.
-- [ ] Implement client processor and plain TS adapter.
-- [ ] Add example and tests.
-- [ ] Run `pnpm test`, `pnpm typecheck`, and `pnpm dev`.
+- [x] Scaffold package and strict TypeScript config.
+- [x] Implement reduced sync-state core.
+- [x] Implement FIFO backend.
+- [x] Implement leader processor.
+- [x] Implement client processor and plain TS adapter.
+- [x] Add example and tests.
+- [x] Run `pnpm test`, `pnpm typecheck`, and `pnpm dev`.
