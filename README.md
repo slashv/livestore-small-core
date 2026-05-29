@@ -20,6 +20,7 @@ pnpm dev
 - `src/client.ts`: reduced client-session processor.
 - `src/adapter.ts`: tiny plain TypeScript store adapter.
 - `test/`: focused tests for sync-state, backend, leader, client, and adapter behavior.
+- `docs/sync.html`: standalone illustrated guide to the sync process and edge cases.
 
 ## Reference
 

@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>livestore-small-core sync guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #161616;
+        --muted: #666;
+        --faint: #e8e8e8;
+        --line: #cfcfcf;
+        --paper: #fff;
+        --code: #f5f5f2;
+        --a: #b4571d;
+        --b: #23745a;
+        --c: #5a5f75;
+        --backend: #2f5f9f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      main {
+        width: min(100% - 40px, 1120px);
+        margin: 0 auto;
+        padding: 56px 0 96px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 260px;
+        gap: 48px;
+        align-items: end;
+        padding-bottom: 48px;
+        border-bottom: 1px solid var(--ink);
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 840px;
+        font-size: clamp(2.6rem, 6vw, 6rem);
+        font-weight: 720;
+      }
+
+      h2 {
+        margin: 96px 0 24px;
+        font-size: clamp(1.9rem, 3vw, 3.2rem);
+        font-weight: 700;
+      }
+
+      h3 {
+        margin: 56px 0 14px;
+        font-size: 1.35rem;
+        font-weight: 680;
+      }
+
+      p {
+        margin: 0 0 18px;
+        max-width: 780px;
+      }
+
+      a {
+        color: var(--ink);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      code {
+        padding: 0.12em 0.32em;
+        border-radius: 3px;
+        background: var(--code);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      pre {
+        overflow: auto;
+        padding: 16px 18px;
+        border-left: 3px solid var(--ink);
+        background: var(--code);
+        font-size: 0.9rem;
+        line-height: 1.55;
+      }
+
+      .lead {
+        margin-top: 24px;
+        font-size: 1.25rem;
+        color: #333;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .toc {
+        font-size: 0.94rem;
+        border-left: 1px solid var(--line);
+        padding-left: 18px;
+      }
+
+      .toc a {
+        display: block;
+        margin: 8px 0;
+        color: #333;
+        text-decoration: none;
+      }
+
+      .toc a:hover {
+        text-decoration: underline;
+      }
+
+      .rule {
+        margin: 48px 0;
+        border: 0;
+        border-top: 1px solid var(--faint);
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 0.78fr);
+        gap: 48px;
+        align-items: start;
+      }
+
+      .caption {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .note {
+        max-width: 820px;
+        margin: 24px 0;
+        padding-left: 16px;
+        border-left: 2px solid var(--ink);
+        color: #333;
+      }
+
+      .source-list {
+        columns: 2;
+        column-gap: 36px;
+        padding-left: 1.1rem;
+      }
+
+      .source-list li {
+        break-inside: avoid;
+        margin: 0 0 8px;
+      }
+
+      .mini-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 22px 0 12px;
+        font-size: 0.95rem;
+      }
+
+      .mini-table th,
+      .mini-table td {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--faint);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .mini-table th {
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      flow-stack,
+      event-lanes,
+      queue-diagram,
+      scenario-steps,
+      notation-strip {
+        display: block;
+        margin: 26px 0 34px;
+      }
+
+      .diagram-shell {
+        margin: 26px 0 34px;
+        overflow-x: auto;
+        padding: 4px 0;
+      }
+
+      .sequence {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+        gap: 24px;
+        min-width: 680px;
+      }
+
+      .sequence .actor {
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--ink);
+        font-weight: 680;
+      }
+
+      .sequence .lane {
+        min-height: 200px;
+        border-left: 1px solid var(--line);
+        padding: 18px 0 0 14px;
+      }
+
+      .sequence .msg {
+        margin: 0 0 18px;
+        font-size: 0.92rem;
+      }
+
+      .sequence .msg strong {
+        display: block;
+        font-weight: 680;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 22px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .legend span::before {
+        content: "";
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 7px;
+        border-radius: 50%;
+        background: var(--ink);
+      }
+
+      .legend .a::before {
+        background: var(--a);
+      }
+
+      .legend .b::before {
+        background: var(--b);
+      }
+
+      .legend .client-local::before {
+        background: transparent;
+        border: 1px dashed var(--ink);
+      }
+
+      @media (max-width: 820px) {
+        main {
+          width: min(100% - 28px, 1120px);
+          padding-top: 36px;
+        }
+
+        header,
+        .two-col {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+
+        .source-list {
+          columns: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="meta">livestore-small-core / sync guide</p>
+          <h1>How the reduced LiveStore sync engine works</h1>
+          <p class="lead">
+            LiveStore syncs events, not database rows. A client session creates local events, a leader orders and
+            persists them locally, and a sync backend enforces the final global order. The hard part is preserving a
+            single total order while clients can work ahead of the backend.
+          </p>
+        </div>
+        <nav class="toc" aria-label="Table of contents">
+          <a href="#one-screen">One-screen model</a>
+          <a href="#event-notation">Event notation</a>
+          <a href="#layers">The three layers</a>
+          <a href="#happy-path">Happy path</a>
+          <a href="#merge">Merge rules</a>
+          <a href="#edge-cases">Edge cases</a>
+          <a href="#small-core">What this repo keeps</a>
+          <a href="#sources">Sources</a>
+        </nav>
+      </header>
+
+      <section id="one-screen">
+        <h2>One-Screen Model</h2>
+        <div class="two-col">
+          <div>
+            <p>
+              The system is hierarchical. Client sessions sync with a local leader; the leader syncs with a backend.
+              Every layer keeps a <code>SyncState</code> with a local head, an upstream head, and pending events.
+            </p>
+            <p>
+              The backend is the global authority. It accepts events only when their parent equals the backend's
+              current head. If another client already advanced the backend, the push is rejected with
+              <code>ServerAheadError</code>; the leader must pull, rebase pending events, and push again.
+            </p>
+          </div>
+          <div>
+            <flow-stack></flow-stack>
+            <p class="caption">
+              The client and leader use composite sequence numbers. The backend only sees global sequence numbers.
+            </p>
+          </div>
+        </div>
+
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Owns</th>
+              <th>Core responsibility</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Client session</td>
+              <td>Optimistic state, pending local events, UI-visible sync state</td>
+              <td>Encode events, apply them locally, pull leader payloads, roll back and rebase when needed.</td>
+            </tr>
+            <tr>
+              <td>Client leader</td>
+              <td>Durable local eventlog, local materialized state, backend push queue</td>
+              <td>Serialize local pushes, broadcast to sessions, pull backend events, rebase pending leader work.</td>
+            </tr>
+            <tr>
+              <td>Sync backend</td>
+              <td>Append-only global eventlog</td>
+              <td>Enforce the total order by accepting only batches that continue the current backend head.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="event-notation">
+        <h2>Event Notation</h2>
+        <p>
+          This page uses the notation from LiveStore's contributor docs. The base form is
+          <code>[Client:]e{global}[.{client}][r{rebaseGeneration}]['][/{origin}][{context}]</code>.
+        </p>
+
+        <notation-strip
+          items="e0|root / parent of first event,e3|confirmed global event,A:e3'|client A pending event,e5.1|client-local event not sent to backend,e4r1|event after one rebase,B:e5'/e3'|B's event now numbered e5; originally e3">
+        </notation-strip>
+
+        <div class="note">
+          Events with a non-zero client component, such as <code>e5.1</code>, are client-local. They can move between
+          client sessions and the leader, but they are filtered out before the backend push queue.
+        </div>
+      </section>
+
+      <section id="layers">
+        <h2>The Three Layers</h2>
+
+        <h3>1. Client Session</h3>
+        <p>
+          The session is closest to the application. In this reduced repo, <code>src/client.ts</code> encodes decoded
+          events from the current local head, merges them as <code>local-push</code>, applies reducers optimistically,
+          then pushes the encoded batch to the leader.
+        </p>
+        <queue-diagram
+          title="Client session queues"
+          left="UI event|todo-created"
+          middle="pending|A:e3'{todo-created}"
+          right="leader pull queue|upstream-advance / upstream-rebase">
+        </queue-diagram>
+
+        <h3>2. Client Leader</h3>
+        <p>
+          The leader is the local ordering point. LiveStore's full implementation uses worker and SQLite scaffolding;
+          this repo keeps the ordering behavior in <code>src/leader.ts</code>. It validates local batches against a
+          push head, serializes local pushes against backend pulls, broadcasts upstream payloads to sessions, and keeps a
+          backend push queue for non-client-only events.
+        </p>
+        <queue-diagram
+          title="Leader queues"
+          left="local pushes|A:e3' B:e3'"
+          middle="leader eventlog|e1 e2 A:e3'"
+          right="backend push queue|A:e3'">
+        </queue-diagram>
+
+        <h3>3. Sync Backend</h3>
+        <p>
+          The backend is deliberately simple. The Cloudflare sync provider stores events and checks that the first
+          pushed event's parent equals the current backend head. <code>src/fifo-backend.ts</code> preserves that rule
+          with a local FIFO log.
+        </p>
+        <pre><code>if (batch[0].parentSeqNum !== currentHead) {
+  fail(new ServerAheadError(currentHead, batch[0].parentSeqNum))
+}</code></pre>
+      </section>
+
+      <section id="happy-path">
+        <h2>Happy Path</h2>
+        <p>
+          A single client creates an event while everyone agrees on <code>e1 → e2</code>. The event is first pending
+          locally, then pending in the leader, then confirmed after the backend accepts and emits it back.
+        </p>
+
+        <scenario-steps
+          steps='[
+            {
+              "title": "Client commits an event",
+              "text": "The session merges A:e3&apos; as local pending and materializes it optimistically.",
+              "client": ["e1", "e2", "A:e3&apos;{todo-created}"],
+              "leader": ["e1", "e2"],
+              "backend": ["e1", "e2"]
+            },
+            {
+              "title": "Leader persists locally",
+              "text": "The leader accepts the batch, updates its local head, and broadcasts an upstream-advance to sessions.",
+              "client": ["e1", "e2", "A:e3{todo-created}"],
+              "leader": ["e1", "e2", "A:e3&apos;{todo-created}"],
+              "backend": ["e1", "e2"]
+            },
+            {
+              "title": "Backend confirms global order",
+              "text": "The backend accepts because parentSeqNum is e2. The leader pulls the confirmation and pending becomes confirmed.",
+              "client": ["e1", "e2", "A:e3{todo-created}"],
+              "leader": ["e1", "e2", "A:e3{todo-created}"],
+              "backend": ["e1", "e2", "A:e3{todo-created}"]
+            }
+          ]'>
+        </scenario-steps>
+      </section>
+
+      <section id="merge">
+        <h2>The Merge Rules</h2>
+        <p>
+          The core algorithm lives in <code>src/sync-state.ts</code>, corresponding to LiveStore's
+          <code>syncstate.ts</code>. Every layer calls the same merge operation with different payloads.
+        </p>
+
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Payload</th>
+              <th>Meaning</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>local-push</code></td>
+              <td>A downstream node created events locally.</td>
+              <td>Append to pending if the first event is ahead of local head; otherwise reject.</td>
+            </tr>
+            <tr>
+              <td><code>upstream-advance</code></td>
+              <td>The upstream node has new confirmed events.</td>
+              <td>Confirm matching pending events, append new upstream events, or rebase divergent pending events.</td>
+            </tr>
+            <tr>
+              <td><code>upstream-rebase</code></td>
+              <td>The upstream node already rebased and tells downstream how to follow.</td>
+              <td>Roll back listed events plus local pending, apply upstream events, then rebase local pending.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <event-lanes
+          client="e1,e2,A:e3'{rename}"
+          leader="e1,e2,A:e3'{rename}"
+          backend="e1,e2">
+        </event-lanes>
+      </section>
+
+      <section id="edge-cases">
+        <h2>Edge Cases</h2>
+
+        <h3>Concurrent Backend Pushes</h3>
+        <p>
+          Two leaders can both create <code>e3'</code> from the same backend head. The backend accepts the first push.
+          The second push fails because its parent is no longer the backend head. That is not a conflict resolution
+          UI; it is a protocol signal telling the second leader to pull and rebase.
+        </p>
+        <scenario-steps
+          steps='[
+            {
+              "title": "Two leaders work from e2",
+              "text": "Both leaders independently number their local event as e3&apos;.",
+              "client": ["e1", "e2", "B:e3&apos;{todo-created}"],
+              "leader": ["e1", "e2", "B:e3&apos;{todo-created}"],
+              "backend": ["e1", "e2"]
+            },
+            {
+              "title": "Client A wins the backend race",
+              "text": "The backend accepts A:e3 because its parent is e2.",
+              "client": ["e1", "e2", "B:e3&apos;{todo-created}"],
+              "leader": ["e1", "e2", "B:e3&apos;{todo-created}"],
+              "backend": ["e1", "e2", "A:e3{todo-created}"]
+            },
+            {
+              "title": "Client B rebases",
+              "text": "B pulls A:e3, rolls back B:e3&apos;, and replays it as B:e4r1&apos;/e3&apos;.",
+              "client": ["e1", "e2", "A:e3{todo-created}", "B:e4r1&apos;{todo-created}/e3&apos;"],
+              "leader": ["e1", "e2", "A:e3{todo-created}", "B:e4r1&apos;{todo-created}/e3&apos;"],
+              "backend": ["e1", "e2", "A:e3{todo-created}"]
+            },
+            {
+              "title": "B pushes after rebase",
+              "text": "The backend now accepts B as e4 because its parent is e3.",
+              "client": ["e1", "e2", "A:e3{todo-created}", "B:e4{todo-created}/e3&apos;"],
+              "leader": ["e1", "e2", "A:e3{todo-created}", "B:e4{todo-created}/e3&apos;"],
+              "backend": ["e1", "e2", "A:e3{todo-created}", "B:e4{todo-created}/e3&apos;"]
+            }
+          ]'>
+        </scenario-steps>
+
+        <h3>Client-Only Events</h3>
+        <p>
+          Client-only events are still part of the client/leader local chain, but the leader filters them before pushing
+          to the backend. That is why they use the client sequence component: <code>e5.1</code> follows
+          <code>e5</code>, but the next synced event can still be <code>e6</code>.
+        </p>
+        <event-lanes
+          client="e5,e5.1'{panel-opened},e5.2'{draft-updated},e6'{todo-created}"
+          leader="e5,e5.1'{panel-opened},e5.2'{draft-updated},e6'{todo-created}"
+          backend="e5">
+        </event-lanes>
+
+        <h3>Leader Push Head Rejects Duplicate Local Pushes</h3>
+        <p>
+          The leader keeps a push head in addition to <code>SyncState</code>. This prevents two sessions from pushing
+          the same first sequence number before the local push queue has finished processing. If the first event is at
+          or behind the push head, the leader rejects with <code>LeaderAheadError</code>; the client pulls and retries
+          from the updated head.
+        </p>
+        <queue-diagram
+          title="Duplicate local push guard"
+          left="session A push|A:e3'"
+          middle="leader pushHead|e3"
+          right="session B stale push|B:e3' rejected">
+        </queue-diagram>
+
+        <h3>Stale Rebase Generation</h3>
+        <p>
+          A queued local push can become stale while a backend pull rebases the leader. LiveStore handles this by
+          comparing each queued event's <code>rebaseGeneration</code> with the current local head generation after the
+          pull mutex is acquired. Older queued events fail with <code>StaleRebaseGenerationError</code> so the session
+          can resubmit.
+        </p>
+
+        <h3>Undefined Args and Wire Round Trips</h3>
+        <p>
+          Event equality canonicalizes args through JSON. Without this, a local pending event with an
+          <code>undefined</code> optional field could compare unequal to the same event after JSON transport, causing a
+          false rebase. This edge case is covered in <code>test/sync-state.test.ts</code>.
+        </p>
+
+        <h3>Backend Reset Detection</h3>
+        <p>
+          Full LiveStore providers use a backend identity to detect when the backend was reset while clients still have
+          cached local state. This reduced repo omits backend identity because its FIFO backend is in-process, but the
+          production concern is documented in LiveStore's syncing docs.
+        </p>
+      </section>
+
+      <section id="small-core">
+        <h2>What This Repo Keeps</h2>
+        <p>
+          The reduced implementation removes platform and storage scaffolding while keeping the protocol behaviors that
+          make sync hard to reason about.
+        </p>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Kept</th>
+              <th>Reduced or omitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Composite sequence numbers, pending queues, merge/rebase logic, leader push rejection.</td>
+              <td>SQLite eventlog tables, workers, HTTP transports, devtools, OpenTelemetry spans.</td>
+            </tr>
+            <tr>
+              <td>Backend append-only parent check and <code>ServerAheadError</code> rebase/retry path.</td>
+              <td>Cloudflare Durable Object storage, WebSocket/RPC transport, backend ID mismatch handling.</td>
+            </tr>
+            <tr>
+              <td>Client optimistic materialization, rollback by event removal, deterministic recomputation.</td>
+              <td>SQLite changesets and materializer hashes. The testable state result is the same for pure reducers.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="sources">
+        <h2>Sources</h2>
+        <p>This document was cross-checked against the LiveStore docs, LiveStore implementation comments, and this repo.</p>
+        <ul class="source-list">
+          <li><code>reference/livestore/docs/src/content/docs/building-with-livestore/syncing.mdx</code></li>
+          <li><code>reference/livestore/docs/src/content/docs/building-with-livestore/events.mdx</code></li>
+          <li><code>reference/livestore/contributor-docs/events-notation.md</code></li>
+          <li><code>reference/livestore/packages/@livestore/common/src/sync/syncstate.ts</code></li>
+          <li><code>reference/livestore/packages/@livestore/common/src/sync/ClientSessionSyncProcessor.ts</code></li>
+          <li><code>reference/livestore/packages/@livestore/common/src/leader-thread/LeaderSyncProcessor.ts</code></li>
+          <li><code>reference/livestore/packages/@livestore/sync-cf/src/cf-worker/do/push.ts</code></li>
+          <li><code>reference/livestore/packages/@livestore/sync-cf/src/cf-worker/do/pull.ts</code></li>
+          <li><code>src/sync-state.ts</code>, <code>src/client.ts</code>, <code>src/leader.ts</code>, <code>src/fifo-backend.ts</code></li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      const escapeHtml = (value) =>
+        String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char])
+
+      const parseEvent = (notation) => {
+        const full = notation.trim()
+        const primary = full.split("/")[0] || full
+        const context = primary.match(/\{([^}]*)\}/)?.[1]
+        const client = primary.includes(":") ? primary.split(":")[0] : ""
+        const sequence = primary.replace(/^[^:]+:/, "").replace(/\{[^}]*\}/g, "")
+        const pending = sequence.includes("'")
+        const local = /\.\d+/.test(sequence)
+        return { full, context, client, pending, local }
+      }
+
+      const eventHtml = (notation) => {
+        const event = parseEvent(notation)
+        const classes = ["event-token"]
+        if (event.pending) classes.push("pending")
+        if (event.local) classes.push("local")
+        if (event.client === "A") classes.push("client-a")
+        if (event.client === "B") classes.push("client-b")
+        return `<span class="${classes.join(" ")}" title="${escapeHtml(event.context || event.full)}">${escapeHtml(event.full)}</span>`
+      }
+
+      class FlowStack extends HTMLElement {
+        connectedCallback() {
+          this.innerHTML = `
+            <div class="flow-stack">
+              <div><strong>Client session</strong><span>optimistic state + pending events</span></div>
+              <i>push / pull</i>
+              <div><strong>Client leader</strong><span>local ordering + backend queue</span></div>
+              <i>push / pull</i>
+              <div><strong>Sync backend</strong><span>append-only global log</span></div>
+            </div>
+          `
+        }
+      }
+
+      class NotationStrip extends HTMLElement {
+        connectedCallback() {
+          const items = (this.getAttribute("items") || "")
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .map((item) => {
+              const [notation, label] = item.split("|")
+              return `<div class="notation-row">${eventHtml(notation)}<span>${escapeHtml(label || "")}</span></div>`
+            })
+            .join("")
+          this.innerHTML = `<div class="notation-strip">${items}</div>`
+        }
+      }
+
+      class EventLanes extends HTMLElement {
+        connectedCallback() {
+          const row = (label, attr) => {
+            const events = (this.getAttribute(attr) || "")
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean)
+              .map(eventHtml)
+              .join('<span class="arrow">→</span>')
+            return `<div class="event-lane"><strong>${label}</strong><div>${events}</div></div>`
+          }
+          this.innerHTML = `<div class="event-lanes">${row("Client session", "client")}${row("Client leader", "leader")}${row("Sync backend", "backend")}</div>`
+        }
+      }
+
+      class QueueDiagram extends HTMLElement {
+        connectedCallback() {
+          const parse = (attr) => {
+            const [title, value] = (this.getAttribute(attr) || "").split("|")
+            return `<div class="queue-cell"><strong>${escapeHtml(title || "")}</strong><span>${escapeHtml(value || "")}</span></div>`
+          }
+          this.innerHTML = `
+            <div class="queue-diagram">
+              <p>${escapeHtml(this.getAttribute("title") || "")}</p>
+              <div>${parse("left")}<i>→</i>${parse("middle")}<i>→</i>${parse("right")}</div>
+            </div>
+          `
+        }
+      }
+
+      class ScenarioSteps extends HTMLElement {
+        connectedCallback() {
+          const raw = this.getAttribute("steps") || "[]"
+          const steps = JSON.parse(raw.replaceAll("&apos;", "'"))
+          this.innerHTML = `<div class="scenario-steps">${steps
+            .map(
+              (step, index) => `
+                <section class="scenario-step">
+                  <div class="step-index">${index + 1}</div>
+                  <div>
+                    <h3>${escapeHtml(step.title)}</h3>
+                    <p>${escapeHtml(step.text)}</p>
+                    <div class="event-lanes">
+                      ${lane("Client session", step.client)}
+                      ${lane("Client leader", step.leader)}
+                      ${lane("Sync backend", step.backend)}
+                    </div>
+                  </div>
+                </section>
+              `,
+            )
+            .join("")}</div>`
+        }
+      }
+
+      const lane = (label, events) =>
+        `<div class="event-lane"><strong>${label}</strong><div>${(events || []).map(eventHtml).join('<span class="arrow">→</span>')}</div></div>`
+
+      customElements.define("flow-stack", FlowStack)
+      customElements.define("notation-strip", NotationStrip)
+      customElements.define("event-lanes", EventLanes)
+      customElements.define("queue-diagram", QueueDiagram)
+      customElements.define("scenario-steps", ScenarioSteps)
+
+      const style = document.createElement("style")
+      style.textContent = `
+        .flow-stack { border-left: 1px solid var(--ink); padding-left: 18px; }
+        .flow-stack div { padding: 14px 0; }
+        .flow-stack strong { display:block; font-size: 1.05rem; }
+        .flow-stack span { color: var(--muted); font-size: .92rem; }
+        .flow-stack i { display:block; color: var(--muted); font-style: normal; padding: 4px 0; }
+
+        .notation-strip { display:grid; gap: 10px; }
+        .notation-row { display:grid; grid-template-columns: minmax(120px, auto) 1fr; gap: 16px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--faint); }
+        .notation-row span:last-child { color: var(--muted); }
+
+        .event-lanes { display:grid; gap: 10px; min-width: min(760px, 100%); }
+        .event-lane { display:grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--faint); }
+        .event-lane strong { font-size: .88rem; color: var(--muted); }
+        .event-lane > div { display:flex; align-items:center; gap: 8px; flex-wrap: wrap; }
+        .arrow { color: var(--line); }
+
+        .event-token { display:inline-flex; align-items:center; min-height: 30px; padding: 3px 9px; border: 1px solid var(--ink); font-family: "SFMono-Regular", Consolas, monospace; font-size: .84rem; color: var(--ink); background: #fff; }
+        .event-token.pending { border-style: dashed; color: #555; }
+        .event-token.local { border-color: #777; background: #fafafa; }
+        .event-token.client-a { border-color: var(--a); color: var(--a); }
+        .event-token.client-b { border-color: var(--b); color: var(--b); }
+
+        .queue-diagram > p { margin: 0 0 10px; color: var(--muted); font-size: .9rem; }
+        .queue-diagram > div { display:grid; grid-template-columns: minmax(140px,1fr) auto minmax(140px,1fr) auto minmax(140px,1fr); gap: 14px; align-items:center; }
+        .queue-diagram i { color: var(--line); font-style: normal; }
+        .queue-cell { min-height: 72px; padding: 12px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--faint); }
+        .queue-cell strong { display:block; font-size: .82rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+        .queue-cell span { display:block; margin-top: 8px; font-family: "SFMono-Regular", Consolas, monospace; }
+
+        .scenario-steps { counter-reset: scenario; display:grid; gap: 34px; }
+        .scenario-step { display:grid; grid-template-columns: 42px minmax(0, 1fr); gap: 20px; padding-top: 28px; border-top: 1px solid var(--faint); }
+        .scenario-step h3 { margin: 0 0 8px; font-size: 1.05rem; }
+        .scenario-step p { margin-bottom: 16px; }
+        .step-index { width: 34px; height: 34px; display:grid; place-items:center; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); font-weight: 680; }
+
+        @media (max-width: 680px) {
+          .event-lane { grid-template-columns: 1fr; gap: 6px; }
+          .queue-diagram > div { grid-template-columns: 1fr; }
+          .queue-diagram i { display:none; }
+          .scenario-step { grid-template-columns: 1fr; }
+        }
+      `
+      document.head.append(style)
+    </script>
+  </body>
+</html>
